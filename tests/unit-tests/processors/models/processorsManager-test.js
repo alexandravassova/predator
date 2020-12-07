@@ -134,6 +134,14 @@ describe('Processor manager tests', function () {
                 should(e.statusCode).equal(409);
             }
         });
+        it('Should throw an error for a processor that does not exist', async function() {
+            try {
+                await manager.deleteProcessor(uuid());
+                throw Error('Should have thrown an error');
+            } catch (e) {
+                should(e.statusCode).equal(404);
+            }
+        });
     });
     describe('Get single processor', function () {
         it('Database returns one row, should return the processor', async function () {

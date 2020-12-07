@@ -125,6 +125,19 @@ describe('webhooksManager', () => {
             expect(databaseConnectorDeleteStub.calledOnce).to.be.equal(true);
             expect(databaseConnectorDeleteStub.args[0][0]).to.be.equal(id);
         });
+        it('should throw error', async function() {
+            const id = uuid.v4();
+            databaseConnectorGetStub.resolves(null);
+
+            try {
+                await webhooksManager.deleteWebhook(id);
+                throw new Error('Should have thrown an error');
+            } catch (error) {
+                expect(error).to.be.an('Error');
+                expect(error.statusCode).to.be.equal(404);
+                expect(error.message).to.be.equal(ERROR_MESSAGES.NOT_FOUND);
+            }
+        });
     });
     describe('#updateWebhook', function() {
         it('should update the webhook successfully', async function() {

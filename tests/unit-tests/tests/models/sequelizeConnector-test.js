@@ -104,6 +104,15 @@ describe('Testing sequelize connector', function () {
             should(findStub.args[0][0].where).eql({ test_id: testId });
             should(res).eql('some_data');
         });
+        it('when succeed to get benchmark with contextId', async function () {
+            findStub.resolves({ data: 'some_data' });
+            const testId = uuid();
+            const res = await sequelizeConnector.getTestBenchmark(testId, 'contextId');
+            const client = sequelizeConnector.__get__('client');
+            should(client.model.args).eql([['benchmark']]);
+            should(findStub.args[0][0].where).eql({ test_id: testId, context_id: 'contextId' });
+            should(res).eql('some_data');
+        });
         it('when no benchmark to get ', async function () {
             findStub.resolves();
             const testId = uuid();
@@ -279,6 +288,67 @@ describe('Testing sequelize connector', function () {
                         ],
                         where: {
                             test_id: 'id'
+                        }
+                    }
+                ]
+            ]);
+            result.forEach(value => delete value.file_id);
+            should(result).match([
+                {
+                    artillery_json: {
+                        art: '1'
+                    },
+                    id: 'test_id1'
+                },
+                {
+                    artillery_json: {
+                        art: '2'
+                    },
+                    id: 'test_id1'
+                }
+            ]);
+        });
+        it('when succeed get all revisions with defined contextId', async function () {
+            findAllStub.returns([
+                {
+                    dataValues: {
+                        artillery_json: JSON.stringify({ art: '1' }),
+                        raw_data: JSON.stringify({ raw: '1' }),
+                        test_id: 'test_id1'
+                    }
+                },
+                {
+                    dataValues: {
+                        artillery_json: JSON.stringify({ art: '2' }),
+                        raw_data: JSON.stringify({ raw: '2' }),
+                        test_id: 'test_id1'
+                    }
+                }
+            ]);
+            const result = await sequelizeConnector.getAllTestRevisions('id', 'contextId');
+            const client = sequelizeConnector.__get__('client');
+            should(client.model.args).eql([['test']]);
+            should(findAllStub.args).eql([
+                [
+                    {
+                        attributes: {
+                            exclude: [
+                                'created_at'
+                            ]
+                        },
+                        order: [
+                            [
+                                'updated_at',
+                                'ASC'
+                            ],
+                            [
+                                'id',
+                                'ASC'
+                            ]
+                        ],
+                        where: {
+                            test_id: 'id',
+                            context_id: 'contextId'
                         }
                     }
                 ]
@@ -613,6 +683,30 @@ describe('Testing sequelize connector', function () {
             ]);
             should(result).eql({ artillery_json: { data: 'data1' } });
         });
+        it('when succeed getDslDefinition', async function () {
+            findAllStub.returns([{ dataValues: { artillery_json: JSON.stringify({ data: 'data1' }) } }, { dataValues: { artillery_json: JSON.stringify({ data: 'data2' }) } }]);
+            const result = await sequelizeConnector.getDslDefinition('dslName', 'definitionName', 'contextId');
+            const client = sequelizeConnector.__get__('client');
+            should(client.model.args).eql([['dsl_definition']]);
+            should(findAllStub.args).eql([
+                [
+                    {
+                        attributes: {
+                            exclude: [
+                                'updated_at',
+                                'created_at'
+                            ]
+                        },
+                        where: {
+                            definition_name: 'definitionName',
+                            dsl_name: 'dslName',
+                            context_id: 'contextId'
+                        }
+                    }
+                ]
+            ]);
+            should(result).eql({ artillery_json: { data: 'data1' } });
+        });
         it('when get getDslDefinition empty - should return undefined', async function () {
             findAllStub.returns([]);
             const result = await sequelizeConnector.getDslDefinition('dslName', 'definitionName');
@@ -682,6 +776,40 @@ describe('Testing sequelize connector', function () {
                         },
                         where: {
                             dsl_name: 'dslName'
+                        }
+                    }
+                ]
+            ]);
+            should(result).eql([
+                {
+                    artillery_json: {
+                        data: 'data1'
+                    }
+                },
+                {
+                    artillery_json: {
+                        data: 'data2'
+                    }
+                }
+            ]);
+        });
+        it('when succeed getDslDefinitions with contextId', async function () {
+            findAllStub.returns([{ dataValues: { artillery_json: JSON.stringify({ data: 'data1' }) } }, { dataValues: { artillery_json: JSON.stringify({ data: 'data2' }) } }]);
+            const result = await sequelizeConnector.getDslDefinitions('dslName', 'contextId');
+            const client = sequelizeConnector.__get__('client');
+            should(client.model.args).eql([['dsl_definition']]);
+            should(findAllStub.args).eql([
+                [
+                    {
+                        attributes: {
+                            exclude: [
+                                'updated_at',
+                                'created_at'
+                            ]
+                        },
+                        where: {
+                            dsl_name: 'dslName',
+                            context_id: 'contextId'
                         }
                     }
                 ]
@@ -772,6 +900,29 @@ describe('Testing sequelize connector', function () {
             ]);
             should(result).eql(true);
         });
+        it('when succeed updateDslDefinition with contextId - return true on applied', async function () {
+            updateStub.returns([1]);
+            const result = await sequelizeConnector.updateDslDefinition('dslName', 'definitionName', { data: 'data' }, 'contextId');
+            const client = sequelizeConnector.__get__('client');
+            should(client.model.args).eql([['dsl_definition']]);
+            should(updateStub.args).eql([
+                [
+                    {
+                        artillery_json: '{"data":"data"}',
+                        definition_name: 'definitionName',
+                        dsl_name: 'dslName'
+                    },
+                    {
+                        where: {
+                            definition_name: 'definitionName',
+                            dsl_name: 'dslName',
+                            context_id: 'contextId'
+                        }
+                    }
+                ]
+            ]);
+            should(result).eql(true);
+        });
         it('when succeed updateDslDefinition - return false when update does not applied', async function () {
             updateStub.returns([0]);
             const result = await sequelizeConnector.updateDslDefinition('dslName', 'definitionName', { data: 'data' });
@@ -834,6 +985,24 @@ describe('Testing sequelize connector', function () {
                         where: {
                             definition_name: 'definitionName',
                             dsl_name: 'dslName'
+                        }
+                    }
+                ]
+            ]);
+            should(result).eql(1);
+        });
+        it('when succeed deleteDefinition with contextId - return true on applied', async function () {
+            destroyStub.returns(1);
+            const result = await sequelizeConnector.deleteDefinition('dslName', 'definitionName', 'contextId');
+            const client = sequelizeConnector.__get__('client');
+            should(client.model.args).eql([['dsl_definition']]);
+            should(destroyStub.args).eql([
+                [
+                    {
+                        where: {
+                            definition_name: 'definitionName',
+                            dsl_name: 'dslName',
+                            context_id: 'contextId'
                         }
                     }
                 ]

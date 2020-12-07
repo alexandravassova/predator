@@ -29,5 +29,21 @@ describe('configManager validators tests', function() {
             should(nextStub.args[0][0].message).eql('Benchmark weights needs to sum up to 100%');
             should(nextStub.args[0][0].statusCode).eql(422);
         });
+        it('should return next when benchmark wegihts sums up to 100', function() {
+            const req = {
+                body: {
+                    benchmark_weights: {
+                        percentile_ninety_five: { percentage: 30 },
+                        percentile_fifty: { percentage: 30 },
+                        server_errors_ratio: { percentage: 0 },
+                        client_errors_ratio: { percentage: 10 },
+                        rps: { percentage: 30 }
+                    }
+                }
+            };
+            const res = {};
+            validators.validateBenchmarkWeights(req, res, nextStub);
+            nextStub.calledOnce.should.eql(true);
+        });
     });
 });

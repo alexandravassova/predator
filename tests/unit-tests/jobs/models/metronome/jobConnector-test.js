@@ -178,5 +178,15 @@ describe('Metronome job connector tests', function () {
                 }
             });
         });
+        describe('Get logs', () => {
+            it('Should return 501', async () => {
+                try {
+                    await jobConnector.getLogs();
+                    throw new Error('Getting logs not supported in metronome');
+                } catch (error) {
+                    error.statusCode.should.eql(501);
+                }
+            });
+        });
     });
 });
