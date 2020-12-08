@@ -131,16 +131,6 @@ export default (props) => {
                             onInputChange({url: evt.target.value})
                         }}/>
                     </TitleInput>
-                    <TitleInput style={{marginRight: '10px'}} title={'Before Request'}>
-                        <ProcessorsDropDown options={processorsExportedFunctions}
-                                            onChange={(value) => onInputChange({beforeRequest: value})}
-                                            value={step.beforeRequest}/>
-                    </TitleInput>
-                    <TitleInput title={'After Response'}>
-                        <ProcessorsDropDown options={processorsExportedFunctions}
-                                            onChange={(value) => onInputChange({afterResponse: value})}
-                                            value={step.afterResponse}/>
-                    </TitleInput>
                     <RequestOptions
                         onGzipToggleChanged={(value) => onInputChange({gzip: value})}
                         onForeverToggleChanged={(value) => onInputChange({forever: value})}
